@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>SERVICE HOUSE — Services près de chez vous</title>
+<style>
+*{box-sizing:border-box}
+:root{--orange:#ff6b00;--dark:#111827;--cream:#fff7f0;--muted:#64748b}
+body{margin:0;background:var(--cream);color:#111827;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--dark);color:#fff;padding:14px 16px;box-shadow:0 2px 10px #0002}
+.head{max-width:960px;margin:auto}
+h1{font-size:23px;margin:0;font-weight:900;letter-spacing:.3px}h1 span{color:var(--orange)}
+#status{display:inline-block;margin-top:7px;padding:5px 9px;border-radius:30px;font-size:12px;font-weight:700;background:#fef3c7;color:#92400e}
+#userLine{font-size:12px;color:#cbd5e1;margin-top:5px}
+.wrap{max-width:960px;margin:auto;padding:14px}
+.card{background:white;border:1px solid #eee;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 2px 10px #00000008}
+h2{font-size:19px;margin:0 0 10px}p{line-height:1.5}
+.small{font-size:13px;color:var(--muted)}
+input,select,textarea{display:block;width:100%;padding:12px;border:1px solid #dbe0e7;border-radius:10px;margin:7px 0;font-size:16px;background:#fff;color:#111827}
+input:focus,select:focus,textarea:focus{outline:2px solid #ff6b0033;border-color:var(--orange)}
+button{border:0;border-radius:999px;padding:11px 16px;font-weight:800;font-size:14px;cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}
+.btn{background:var(--orange);color:#fff}.btn2{background:var(--dark);color:white}.ghost{background:#f1f5f9;color:#111827}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.tabs button{background:#fff;color:#334155;border:1px solid #e2e8f0}
+.tabs button.active{background:var(--dark);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.listing{min-width:0;border:1px solid #eee;border-radius:14px;padding:14px;background:#fff;overflow-wrap:anywhere}
+.listing h3{margin:0 0 7px;font-size:17px}
+.price{color:var(--orange);font-weight:900;font-size:19px;margin:6px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hidden{display:none!important}
+.auth-card{max-width:520px;margin:18px auto;border:1px solid #fed7aa}
+.auth-card .btn{width:100%;margin-top:8px}
+.auth-switch{background:transparent;color:#c2410c;padding:8px 0;text-decoration:underline}
+.auth-message{min-height:20px;font-size:13px;white-space:pre-wrap;color:#b91c1c}
+.notice{padding:10px;border-radius:10px;background:#f8fafc;color:#334155;font-size:13px;white-space:pre-wrap}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.wrap{padding:10px}.card{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="head">
+<h1>SERVICE <span>HOUSE</span></h1>
+<div id="status">⏳ Connexion Firebase…</div>
+<div id="userLine">Initialisation sécurisée en cours…</div>
+<button class="btn hidden" id="btnLogout" style="margin-top:8px">Se déconnecter</button>
+</div></header>
+<main class="wrap">
+<section id="authScreen" class="card auth-card">
+  <h2 id="authTitle">Créer un compte SERVICE HOUSE</h2>
+  <p class="small" id="authDescription">Inscris-toi avec ton nom, ton e-mail et un mot de passe. Tu accéderas directement à l’application.</p>
+  <form id="authForm">
+    <input id="authName" maxlength="60" autocomplete="name" placeholder="Ton nom" required>
+    <input id="authEmail" type="email" maxlength="254" autocomplete="email" placeholder="Adresse e-mail" required>
+    <input id="authPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Mot de passe (6 caractères minimum)" required>
+    <button class="btn" id="authSubmit" type="submit">Créer mon compte</button>
+  </form>
+  <button class="auth-switch" id="authModeToggle" type="button">J’ai déjà un compte : me connecter</button>
+  <button class="auth-switch hidden" id="forgotPassword" type="button">Mot de passe oublié ?</button>
+  <p id="authMessage" class="auth-message" aria-live="polite"></p>
+</section>
+<div id="appContent" class="hidden">
+<section class="card">
+<h2>👋 Ton profil prestataire</h2>
+<p class="small">Enregistre ton nom et ton numéro WhatsApp. Ces informations apparaîtront sur tes annonces.</p>
+<input id="myName" maxlength="60" autocomplete="name" placeholder="Ton nom (ex. Machoud)">
+<input id="myPhone" type="tel" maxlength="20" autocomplete="tel" placeholder="WhatsApp (ex. +229 97 00 00 00)">
+<button class="btn" id="btnSaveMe">✅ Enregistrer mon profil</button>
+<p id="meMsg" class="small" aria-live="polite"></p>
+</section>
+
+<nav class="tabs" aria-label="Navigation">
+<button class="active" data-tab="accueil">🏠 Accueil</button>
+<button data-tab="publier">➕ Publier</button>
+<button data-tab="infos">ℹ️ Infos</button>
+</nav>
+
+<section id="tab-accueil">
+<input id="search" type="search" placeholder="🔍 Rechercher un service…" aria-label="Rechercher">
+<select id="filterCat" aria-label="Filtrer par catégorie">
+<option value="">Toutes les catégories</option><option>Ménage</option><option>Plomberie</option><option>Électricité</option><option>Climatisation</option><option>Peinture</option><option>Jardinage</option><option>Déménagement</option><option>Coiffure</option><option>Autre</option>
+</select>
+<p id="count" class="small">Chargement des annonces…</p>
+<div id="listings" class="grid"></div>
+<div id="empty" class="card hidden"><b>Aucune annonce trouvée.</b><p class="small">Tu peux publier la première annonce.</p></div>
+</section>
+
+<section id="tab-publier" class="hidden">
+<div class="card">
+<h2>Publier une annonce</h2>
+<p class="small">Les champs marqués sont nécessaires. Les annonces sont enregistrées dans Firebase.</p>
+<input id="title" maxlength="90" placeholder="Titre (ex. Ménage complet maison)" required>
+<select id="category"><option>Ménage</option><option>Plomberie</option><option>Électricité</option><option>Climatisation</option><option>Peinture</option><option>Jardinage</option><option>Déménagement</option><option>Coiffure</option><option>Autre</option></select>
+<input id="price" type="number" min="0" max="100000000" step="1" inputmode="numeric" placeholder="Prix en FCFA (ex. 5000)" required>
+<input id="city" maxlength="80" placeholder="Ville / quartier (ex. Cotonou)" value="Cotonou" required>
+<textarea id="desc" rows="4" maxlength="1200" placeholder="Description du service (1200 caractères maximum)…"></textarea>
+<button class="btn" id="btnPublish">Publier l’annonce →</button>
+<p id="pubMsg" class="small" aria-live="polite"></p>
+</div>
+</section>
+
+<section id="tab-infos" class="hidden">
+<div class="card">
+<h2>Informations & sécurité</h2>
+<p class="small">Les annonces sont publiques et chaque annonce appartient au compte de son auteur. Les utilisateurs se connectent avec leur e-mail et leur mot de passe. Applique les règles Firestore fournies séparément.</p>
+<p class="small">Ne publie pas de données privées dans les descriptions. Les numéros WhatsApp sont affichés aux visiteurs.</p>
+</div>
+</section>
+</div><!-- appContent -->
+</main>
+
+<script type="importmap">
+{"imports":{
+"firebase/app":"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+"firebase/auth":"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+"firebase/firestore":"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+}}
+</script>
+<script type="module">
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCBgDDxYx7KHBoi80goUJJrM-h9TK8iTCI",
+  authDomain: "service-house-de4e9.firebaseapp.com",
+  projectId: "service-house-de4e9",
+  storageBucket: "service-house-de4e9.firebasestorage.app",
+  messagingSenderId: "841941397863",
+  appId: "1:841941397863:web:d2631242810dda6610bfc2"
+};
+
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+let db, auth, currentUser = null, allListings = [], stopListening = null;
+let isSignupMode = true;
+
+const getMe = () => ({
+  name: localStorage.getItem("sh_name") || "",
+  phone: localStorage.getItem("sh_phone") || ""
+});
+function refreshMe(){
+  const me = getMe();
+  $("userLine").textContent = currentUser
+    ? "🟢 Compte connecté : " + currentUser.email + (me.name ? " • Profil : " + me.name : "")
+    : "Connexion en cours…";
+  $("myName").value = me.name;
+  $("myPhone").value = me.phone;
+}
+function setStatus(message, type="wait"){
+  statusEl.textContent = message;
+  statusEl.style.background = type==="ok" ? "#dcfce7" : type==="err" ? "#fee2e2" : "#fef3c7";
+  statusEl.style.color = type==="ok" ? "#166534" : type==="err" ? "#991b1b" : "#92400e";
+}
+function esc(value){
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function phoneForWhatsApp(raw){
+  let digits = String(raw || "").replace(/\D/g,"");
+  if(digits.startsWith("00")) digits = digits.slice(2);
+  if(digits.length === 8) digits = "229" + digits;
+  return digits;
+}
+function render(){
+  const term = $("search").value.trim().toLowerCase();
+  const category = $("filterCat").value;
+  const list = allListings.filter(item => {
+    const searchable = [item.title,item.description,item.category,item.city,item.ownerName]
+      .join(" ").toLowerCase();
+    return (!term || searchable.includes(term)) && (!category || item.category===category);
+  });
+  $("count").textContent = `${list.length} annonce(s)`;
+  $("empty").classList.toggle("hidden", list.length > 0);
+  const box = $("listings");
+  box.replaceChildren();
+
+  list.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "listing";
+    const isMine = currentUser && item.ownerUid === currentUser.uid;
+    const whatsapp = phoneForWhatsApp(item.ownerPhone);
+    card.innerHTML = `
+      <h3>${esc(item.title)}</h3>
+      <div class="price">${Number(item.price || 0).toLocaleString("fr-FR")} FCFA</div>
+      <div class="small">${esc(item.category)} • ${esc(item.city)}</div>
+      <p>${esc(item.description || "Aucune description.")}</p>
+      <div class="small">Par : ${esc(item.ownerName || "Prestataire")}</div>
+      <div class="actions">
+        ${whatsapp ? `<button class="btn" data-contact>💬 Contacter WhatsApp</button>` : ""}
+        ${isMine ? `<button class="ghost" data-delete>🗑 Supprimer</button>` : ""}
+      </div>`;
+    const contact = card.querySelector("[data-contact]");
+    if(contact) contact.addEventListener("click", () => {
+      const url = "https://wa.me/" + whatsapp + "?text=" + encodeURIComponent("Bonjour, je suis intéressé(e) par votre annonce : " + item.title);
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+    const del = card.querySelector("[data-delete]");
+    if(del) del.addEventListener("click", async () => {
+      if(!confirm("Supprimer définitivement cette annonce ?")) return;
+      del.disabled = true;
+      try { await deleteDoc(doc(db,"listings",item.id)); }
+      catch(error){ alert("Suppression impossible : " + error.message); del.disabled = false; }
+    });
+    box.appendChild(card);
+  });
+}
+
+function setAuthMode(signup){
+  isSignupMode = signup;
+  $("authTitle").textContent = signup ? "Créer un compte SERVICE HOUSE" : "Se connecter à SERVICE HOUSE";
+  $("authDescription").textContent = signup
+    ? "Inscris-toi avec ton nom, ton e-mail et un mot de passe. Tu accéderas directement à l’application."
+    : "Connecte-toi avec ton e-mail et ton mot de passe pour retrouver ton compte.";
+  $("authName").classList.toggle("hidden", !signup);
+  $("authName").required = signup;
+  $("authName").autocomplete = signup ? "name" : "off";
+  $("authPassword").autocomplete = signup ? "new-password" : "current-password";
+  $("authPassword").placeholder = signup ? "Mot de passe (6 caractères minimum)" : "Mot de passe";
+  $("authSubmit").textContent = signup ? "Créer mon compte" : "Me connecter";
+  $("authModeToggle").textContent = signup ? "J’ai déjà un compte : me connecter" : "Je n’ai pas de compte : m’inscrire";
+  $("forgotPassword").classList.toggle("hidden", signup);
+  $("authMessage").textContent = "";
+}
+
+$("authModeToggle").addEventListener("click", () => setAuthMode(!isSignupMode));
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const email = $("authEmail").value.trim().toLowerCase();
+  const password = $("authPassword").value;
+  const name = $("authName").value.trim();
+  const submit = $("authSubmit");
+  const message = $("authMessage");
+  if(!auth){ message.textContent = "Firebase n’est pas encore initialisé. Recharge la page et réessaie."; return; }
+  if(isSignupMode && name.length < 2){ message.textContent = "Indique un nom d’au moins 2 caractères."; return; }
+  if(password.length < 6){ message.textContent = "Le mot de passe doit contenir au moins 6 caractères."; return; }
+  submit.disabled = true;
+  message.style.color = "#64748b";
+  message.textContent = isSignupMode ? "Création du compte…" : "Connexion…";
+  try{
+    if(isSignupMode){
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(credential.user, {displayName:name});
+      localStorage.setItem("sh_name", name);
+      message.style.color = "#166534";
+      message.textContent = "Compte créé ! Ouverture de SERVICE HOUSE…";
+    }else{
+      await signInWithEmailAndPassword(auth, email, password);
+      message.style.color = "#166534";
+      message.textContent = "Connexion réussie ! Ouverture de SERVICE HOUSE…";
+    }
+  }catch(error){
+    message.style.color = "#b91c1c";
+    const messages = {
+      "auth/email-already-in-use":"Cette adresse e-mail possède déjà un compte. Connecte-toi.",
+      "auth/invalid-email":"L’adresse e-mail n’est pas valide.",
+      "auth/weak-password":"Mot de passe trop faible : utilise au moins 6 caractères.",
+      "auth/invalid-credential":"E-mail ou mot de passe incorrect.",
+      "auth/user-not-found":"Aucun compte trouvé avec cette adresse.",
+      "auth/wrong-password":"Mot de passe incorrect.",
+      "auth/too-many-requests":"Trop de tentatives. Réessaie plus tard.",
+      "auth/network-request-failed":"Connexion Internet indisponible. Vérifie ton réseau."
+    };
+    message.textContent = messages[error.code] || ("Erreur : " + error.message);
+  }finally{ submit.disabled = false; }
+});
+
+$("forgotPassword").addEventListener("click", async () => {
+  const email = $("authEmail").value.trim().toLowerCase();
+  const message = $("authMessage");
+  if(!email){ message.textContent = "Saisis ton adresse e-mail dans le champ ci-dessus."; return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    message.style.color = "#166534";
+    message.textContent = "Si cette adresse est associée à un compte, un e-mail de réinitialisation a été envoyé.";
+  }catch(error){
+    message.style.color = "#b91c1c";
+    message.textContent = error.code === "auth/invalid-email" ? "Adresse e-mail invalide." : "Impossible d’envoyer le lien. Vérifie l’e-mail et réessaie.";
+  }
+});
+
+$("btnLogout").addEventListener("click", async () => {
+  try{ await signOut(auth); setStatus("Déconnecté","wait"); }
+  catch(error){ alert("Déconnexion impossible : " + error.message); }
+});
+
+$("btnSaveMe").addEventListener("click", () => {
+  const name = $("myName").value.trim();
+  const phone = $("myPhone").value.trim();
+  if(!name){ $("meMsg").textContent = "❌ Indique ton nom."; return; }
+  if(phone && phoneForWhatsApp(phone).length < 8){ $("meMsg").textContent = "❌ Vérifie le numéro WhatsApp."; return; }
+  localStorage.setItem("sh_name",name);
+  localStorage.setItem("sh_phone",phone);
+  $("meMsg").textContent = "✅ Profil enregistré sur cet appareil.";
+  refreshMe();
+});
+
+document.querySelectorAll(".tabs button").forEach(button => button.addEventListener("click", () => {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b===button));
+  ["accueil","publier","infos"].forEach(tab => $("tab-"+tab).classList.toggle("hidden", tab!==button.dataset.tab));
+}));
+
+$("search").addEventListener("input",render);
+$("filterCat").addEventListener("change",render);
+
+$("btnPublish").addEventListener("click", async () => {
+  const me = getMe();
+  const title = $("title").value.trim();
+  const category = $("category").value;
+  const priceRaw = $("price").value.trim();
+  const price = Number(priceRaw);
+  const city = $("city").value.trim();
+  const description = $("desc").value.trim();
+  const message = $("pubMsg");
+
+  if(!currentUser){ message.textContent = "❌ Connexion Firebase pas encore prête."; return; }
+  if(!me.name){ message.textContent = "❌ Enregistre ton nom dans ton profil avant de publier."; return; }
+  if(!me.phone || phoneForWhatsApp(me.phone).length < 8){ message.textContent = "❌ Ajoute un numéro WhatsApp valide dans ton profil."; return; }
+  if(title.length < 4){ message.textContent = "❌ Le titre doit contenir au moins 4 caractères."; return; }
+  if(priceRaw === "" || !Number.isFinite(price) || price < 0 || price > 100000000){ message.textContent = "❌ Entre un prix valide en FCFA."; return; }
+  if(!city){ message.textContent = "❌ Indique la ville ou le quartier."; return; }
+  if(description.length < 10){ message.textContent = "❌ La description doit contenir au moins 10 caractères."; return; }
+
+  const button = $("btnPublish");
+  button.disabled = true;
+  message.textContent = "⏳ Publication en cours…";
+  try{
+    await addDoc(collection(db,"listings"),{
+      title, category, price, city, description,
+      ownerName: me.name,
+      ownerPhone: phoneForWhatsApp(me.phone),
+      ownerUid: currentUser.uid,
+      createdAt: serverTimestamp(),
+      status: "active"
+    });
+    message.textContent = "✅ Annonce publiée avec succès.";
+    $("title").value = "";
+    $("price").value = "";
+    $("desc").value = "";
+    document.querySelector('[data-tab="accueil"]').click();
+  }catch(error){
+    message.textContent = "❌ Publication impossible : " + error.message + ". Vérifie les règles Firestore et que tu es connecté.";
+  }finally{ button.disabled = false; }
+});
+
+async function start(){
+  try{
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    setStatus("⏳ Préparation de la connexion…");
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      const signedIn = Boolean(user);
+      $("authScreen").classList.toggle("hidden", signedIn);
+      $("appContent").classList.toggle("hidden", !signedIn);
+      $("btnLogout").classList.toggle("hidden", !signedIn);
+      if(!signedIn){
+        setStatus("🔐 Connecte-toi pour utiliser SERVICE HOUSE","wait");
+        $("userLine").textContent = "Crée ton compte ou connecte-toi directement ici.";
+        allListings = [];
+        render();
+        if(stopListening){ stopListening(); stopListening = null; }
+        return;
+      }
+      const me = getMe();
+      if(!me.name && user.displayName){ localStorage.setItem("sh_name", user.displayName); }
+      refreshMe();
+      setStatus("🟢 SERVICE HOUSE est prêt • Annonces en direct","ok");
+      if(stopListening) stopListening();
+      const q = query(collection(db,"listings"),orderBy("createdAt","desc"));
+      stopListening = onSnapshot(q, snapshot => {
+        allListings = snapshot.docs.map(d => ({id:d.id,...d.data()}));
+        render();
+      }, error => {
+        setStatus("🔴 Erreur Firestore : " + error.message,"err");
+        $("count").textContent = "Impossible de charger les annonces. Vérifie les règles Firestore.";
+      });
+    }, error => {
+      setStatus("🔴 Authentification : " + error.message,"err");
+      $("authMessage").textContent = "Erreur de connexion Firebase. Vérifie ta connexion Internet et les paramètres Firebase.";
+    });
+  }catch(error){
+    setStatus("🔴 Firebase : " + error.message,"err");
+    $("userLine").textContent = "Vérifie la configuration du projet Firebase.";
+    $("authMessage").textContent = "Initialisation échouée : " + error.message;
+  }
+}
+refreshMe();
+setAuthMode(true);
+start();
+</script>
+</body>
+</html>
